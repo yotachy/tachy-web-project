@@ -1,0 +1,478 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- =========================
+     Market Drivers (FX / Rates)
+     ========================= -->
+<div class="section-head">
+  <div class="section-title">Market Drivers</div>
+  <div class="section-subtitle">FX and rates that set the risk regime</div>
+</div>
+
+<div class="kpi-grid">
+
+  <!-- DXY -->
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <div>
+        <div class="kpi-label">DXY</div>
+        <div class="kpi-title">US Dollar Index</div>
+      </div>
+      <div class="kpi-badge">FX</div>
+    </div>
+
+    <div class="kpi-value">103.42</div>
+
+    <div class="kpi-meta">
+      <span class="kpi-change kpi-change--down">-0.31%</span>
+      <span>Updated: 10:35 UTC</span>
+    </div>
+
+    <div class="sparkline" id="dxySpark" data-sparkline></div>
+
+    <div class="kpi-foot">Dollar strength often correlates with risk-off conditions.</div>
+  </div>
+
+  <!-- US10Y -->
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <div>
+        <div class="kpi-label">US10Y</div>
+        <div class="kpi-title">10Y Treasury Yield</div>
+      </div>
+      <div class="kpi-badge">Rates</div>
+    </div>
+
+    <div class="kpi-value">4.18%</div>
+
+    <div class="kpi-meta">
+      <span class="kpi-change kpi-change--up">+6 bps</span>
+      <span>Updated: 10:35 UTC</span>
+    </div>
+
+    <div class="sparkline" id="us10ySpark" data-sparkline></div>
+
+    <div class="kpi-foot">Key discount rate for duration-sensitive assets.</div>
+  </div>
+
+  <!-- US2Y -->
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <div>
+        <div class="kpi-label">US2Y</div>
+        <div class="kpi-title">2Y Treasury Yield</div>
+      </div>
+      <div class="kpi-badge">Rates</div>
+    </div>
+
+    <div class="kpi-value">4.46%</div>
+
+    <div class="kpi-meta">
+      <span class="kpi-change kpi-change--up">+4 bps</span>
+      <span>Updated: 10:35 UTC</span>
+    </div>
+
+    <div class="sparkline" id="us2ySpark" data-sparkline></div>
+
+    <div class="kpi-foot">Captures policy expectations and front-end stress.</div>
+  </div>
+
+  <!-- 2s10s Spread (wide) -->
+  <div class="kpi-card kpi-card--wide">
+    <div class="kpi-top">
+      <div>
+        <div class="kpi-label">2s10s</div>
+        <div class="kpi-title">Yield Curve Spread (10Y − 2Y)</div>
+      </div>
+      <div class="kpi-badge kpi-badge--accent">Curve</div>
+    </div>
+
+    <div class="kpi-value">-0.28%</div>
+
+    <div class="kpi-meta">
+      <span class="kpi-change kpi-change--up">+3 bps</span>
+      <span>Updated: 10:35 UTC</span>
+    </div>
+
+    <div class="sparkline" id="curveSpark" data-sparkline></div>
+
+    <div class="kpi-foot">Steepening often signals easing expectations or reflation dynamics.</div>
+  </div>
+
+</div>
+
+<!-- =========================
+     Risk Assets (Equities)
+     ========================= -->
+<div class="section-head">
+  <div class="section-title">Risk Assets</div>
+  <div class="section-subtitle">Equity benchmarks for risk appetite</div>
+</div>
+
+<div class="kpi-grid">
+
+  <!-- SPX -->
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <div>
+        <div class="kpi-label">SPX</div>
+        <div class="kpi-title">S&amp;P 500</div>
+      </div>
+      <div class="kpi-badge">Equity</div>
+    </div>
+
+    <div class="kpi-value">4,912.7</div>
+
+    <div class="kpi-meta">
+      <span class="kpi-change kpi-change--up">+0.62%</span>
+      <span>Updated: 10:35 UTC</span>
+    </div>
+
+    <div class="sparkline" id="spxSpark" data-sparkline></div>
+
+    <div class="kpi-foot">Broad risk asset baseline for global sentiment.</div>
+  </div>
+
+  <!-- NDX -->
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <div>
+        <div class="kpi-label">NDX</div>
+        <div class="kpi-title">Nasdaq 100</div>
+      </div>
+      <div class="kpi-badge">Equity</div>
+    </div>
+
+    <div class="kpi-value">17,420.3</div>
+
+    <div class="kpi-meta">
+      <span class="kpi-change kpi-change--up">+0.91%</span>
+      <span>Updated: 10:35 UTC</span>
+    </div>
+
+    <div class="sparkline" id="ndxSpark" data-sparkline></div>
+
+    <div class="kpi-foot">Growth/duration proxy; sensitive to yields and liquidity.</div>
+  </div>
+
+  <!-- VIX -->
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <div>
+        <div class="kpi-label">VIX</div>
+        <div class="kpi-title">Volatility Index</div>
+      </div>
+      <div class="kpi-badge">Vol</div>
+    </div>
+
+    <div class="kpi-value">13.8</div>
+
+    <div class="kpi-meta">
+      <span class="kpi-change kpi-change--down">-2.1%</span>
+      <span>Updated: 10:35 UTC</span>
+    </div>
+
+    <div class="sparkline" id="vixSpark" data-sparkline></div>
+
+    <div class="kpi-foot">Stress gauge; rising VIX often pressures risk assets.</div>
+  </div>
+
+  <!-- Credit Spreads (placeholder) -->
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <div>
+        <div class="kpi-label">HYG</div>
+        <div class="kpi-title">High Yield Proxy</div>
+      </div>
+      <div class="kpi-badge">Credit</div>
+    </div>
+
+    <div class="kpi-value">—</div>
+
+    <div class="kpi-meta">
+      <span class="kpi-change">—</span>
+      <span>Updated: —</span>
+    </div>
+
+    <div class="sparkline" id="hygSpark" data-sparkline></div>
+
+    <div class="kpi-foot">Optional: credit conditions (risk-on durability).</div>
+  </div>
+
+</div>
+
+<!-- =========================
+     Liquidity
+     ========================= -->
+<div class="section-head">
+  <div class="section-title">Liquidity</div>
+  <div class="section-subtitle">The most important long-run driver for risk assets</div>
+</div>
+
+<div class="kpi-grid">
+
+  <!-- Global M2 (wide) -->
+  <div class="kpi-card kpi-card--wide">
+    <div class="kpi-top">
+      <div>
+        <div class="kpi-label">Global M2</div>
+        <div class="kpi-title">Liquidity Trend (proxy)</div>
+      </div>
+      <div class="kpi-badge kpi-badge--accent">Liquidity</div>
+    </div>
+
+    <div class="kpi-value">+2.4% YoY</div>
+
+    <div class="kpi-meta">
+      <span class="kpi-change kpi-change--up">+0.3pp</span>
+      <span>Updated: weekly</span>
+    </div>
+
+    <div class="sparkline" id="m2Spark" data-sparkline></div>
+
+    <div class="kpi-foot">Risk assets often follow liquidity with a lag.</div>
+  </div>
+
+  <!-- Fed Balance Sheet -->
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <div>
+        <div class="kpi-label">Fed BS</div>
+        <div class="kpi-title">Fed Balance Sheet</div>
+      </div>
+      <div class="kpi-badge">Policy</div>
+    </div>
+
+    <div class="kpi-value">$7.1T</div>
+
+    <div class="kpi-meta">
+      <span class="kpi-change kpi-change--down">-0.2%</span>
+      <span>Updated: weekly</span>
+    </div>
+
+    <div class="sparkline" id="fedSpark" data-sparkline></div>
+
+    <div class="kpi-foot">QT/QE regime context; impacts system liquidity.</div>
+  </div>
+
+  <!-- RRP / TGA (optional placeholders) -->
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <div>
+        <div class="kpi-label">RRP</div>
+        <div class="kpi-title">Reverse Repo (ON RRP)</div>
+      </div>
+      <div class="kpi-badge">Liquidity</div>
+    </div>
+
+    <div class="kpi-value">—</div>
+
+    <div class="kpi-meta">
+      <span class="kpi-change">—</span>
+      <span>Updated: —</span>
+    </div>
+
+    <div class="sparkline" id="rrpSpark" data-sparkline></div>
+
+    <div class="kpi-foot">Optional: plumbing indicator for marginal liquidity.</div>
+  </div>
+
+</div>
+
+<!-- =========================
+     Growth / Inflation
+     ========================= -->
+<div class="section-head">
+  <div class="section-title">Growth &amp; Inflation</div>
+  <div class="section-subtitle">Cycle indicators that shape expectations</div>
+</div>
+
+<div class="kpi-grid">
+
+  <!-- ISM -->
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <div>
+        <div class="kpi-label">ISM</div>
+        <div class="kpi-title">Manufacturing PMI</div>
+      </div>
+      <div class="kpi-badge">Macro</div>
+    </div>
+
+    <div class="kpi-value">49.6</div>
+
+    <div class="kpi-meta">
+      <span class="kpi-change kpi-change--down">-0.4</span>
+      <span>Updated: monthly</span>
+    </div>
+
+    <div class="sparkline" id="ismSpark" data-sparkline></div>
+
+    <div class="kpi-foot">Above 50 = expansion; below 50 = contraction.</div>
+  </div>
+
+  <!-- CPI -->
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <div>
+        <div class="kpi-label">CPI</div>
+        <div class="kpi-title">Inflation (YoY)</div>
+      </div>
+      <div class="kpi-badge">Macro</div>
+    </div>
+
+    <div class="kpi-value">3.2%</div>
+
+    <div class="kpi-meta">
+      <span class="kpi-change kpi-change--down">-0.1pp</span>
+      <span>Updated: monthly</span>
+    </div>
+
+    <div class="sparkline" id="cpiSpark" data-sparkline></div>
+
+    <div class="kpi-foot">Key input to policy and real rate expectations.</div>
+  </div>
+
+  <!-- Unemployment (optional) -->
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <div>
+        <div class="kpi-label">UNRATE</div>
+        <div class="kpi-title">Unemployment Rate</div>
+      </div>
+      <div class="kpi-badge">Macro</div>
+    </div>
+
+    <div class="kpi-value">3.9%</div>
+
+    <div class="kpi-meta">
+      <span class="kpi-change kpi-change--up">+0.1pp</span>
+      <span>Updated: monthly</span>
+    </div>
+
+    <div class="sparkline" id="unrateSpark" data-sparkline></div>
+
+    <div class="kpi-foot">Labor cooling often precedes easing regimes.</div>
+  </div>
+
+  <!-- GDPNow / surprise (placeholder) -->
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <div>
+        <div class="kpi-label">Growth</div>
+        <div class="kpi-title">Nowcast / Surprise</div>
+      </div>
+      <div class="kpi-badge">Macro</div>
+    </div>
+
+    <div class="kpi-value">—</div>
+
+    <div class="kpi-meta">
+      <span class="kpi-change">—</span>
+      <span>Updated: —</span>
+    </div>
+
+    <div class="sparkline" id="nowcastSpark" data-sparkline></div>
+
+    <div class="kpi-foot">Optional: growth momentum / surprise factor.</div>
+  </div>
+
+</div>
+
+<!-- =========================
+     Regime Summary (the "premium" area)
+     ========================= -->
+<div class="panel-lite">
+  <div class="panel-lite__title">Macro Regime Summary</div>
+  <div class="panel-lite__body">
+    <div class="regime-grid">
+
+      <div class="regime-card">
+        <div class="regime-label">Regime</div>
+        <div class="regime-value">Neutral → Risk-On</div>
+        <div class="regime-foot">Composite view from dollar, rates, equity, and liquidity.</div>
+      </div>
+
+      <div class="regime-card">
+        <div class="regime-label">Key Drivers</div>
+        <div class="regime-foot">
+          • Dollar: easing<br>
+          • Rates: stable-to-lower<br>
+          • Equity: trending up<br>
+          • Liquidity: improving
+        </div>
+      </div>
+
+      <div class="regime-card">
+        <div class="regime-label">Watchlist</div>
+        <div class="regime-foot">
+          • DXY breakout risk<br>
+          • Front-end yields re-accelerate<br>
+          • Volatility regime shift (VIX)
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- =========================
+     Dummy Sparklines (local, no API)
+     Replace later with real arrays from backend/API
+     ========================= -->
+<script>
+  // Minimal local sparkline renderer (same logic used in crypto.html)
+  function renderSparkline(el, values){
+    if (!el || !Array.isArray(values) || values.length < 2) return;
+
+    const width = 120, height = 32, pad = 2;
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const span = (max - min) || 1;
+
+    const xStep = (width - pad * 2) / (values.length - 1);
+    const points = values.map((v, i) => {
+      const x = pad + i * xStep;
+      const y = pad + (height - pad * 2) * (1 - (v - min) / span);
+      return `${x.toFixed(2)},${y.toFixed(2)}`;
+    });
+
+    const up = values[values.length - 1] >= values[0];
+
+    el.innerHTML = `
+      <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true">
+        <polyline class="sparkline__line ${up ? "is-up" : "is-down"}"
+                  points="${points.join(" ")}"></polyline>
+      </svg>
+    `;
+  }
+
+  const $ = (id) => document.getElementById(id);
+
+  // Dummy series (7 points each)
+  const series = {
+    dxySpark:     [103.6, 103.2, 103.4, 103.1, 103.0, 103.3, 103.42],
+    us10ySpark:   [4.10,  4.12,  4.08,  4.15,  4.20,  4.16,  4.18],
+    us2ySpark:    [4.40,  4.42,  4.39,  4.45,  4.47,  4.44,  4.46],
+    curveSpark:   [-0.30, -0.29, -0.31, -0.27, -0.26, -0.28, -0.28],
+    spxSpark:     [4860,  4890,  4875,  4920,  4910,  4905,  4912.7],
+    ndxSpark:     [17320, 17410, 17380, 17520, 17490, 17440, 17420.3],
+    vixSpark:     [14.8,  14.2,  14.6,  13.9,  14.1,  13.7,  13.8],
+    hygSpark:     [0,0,0,0,0,0,0],
+    m2Spark:      [2.0,   2.05,  2.1,   2.2,   2.25,  2.3,   2.4],
+    fedSpark:     [7.25,  7.23,  7.22,  7.20,  7.18,  7.15,  7.10],
+    rrpSpark:     [0,0,0,0,0,0,0],
+    ismSpark:     [48.9,  49.2,  49.7,  49.9,  49.5,  50.0,  49.6],
+    cpiSpark:     [3.7,   3.6,   3.5,   3.4,   3.3,   3.2,   3.2],
+    unrateSpark:  [3.6,   3.7,   3.8,   3.8,   3.9,   3.9,   3.9],
+    nowcastSpark: [0,0,0,0,0,0,0],
+  };
+
+  Object.entries(series).forEach(([id, values]) => {
+    // placeholder series는 그리지 않음(0만 있는 경우)
+    if (values.every(v => v === 0)) return;
+    renderSparkline($(id), values);
+  });
+</script>
+
+{% endblock %}

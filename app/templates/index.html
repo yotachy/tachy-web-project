@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <title>Tablet Web Project</title>
+</head>
+<body>
+
+  <h1>비트코인 가격</h1>
+
+  <button id="btn">비트코인 가격 불러오기</button>
+  <pre id="out">아직 데이터 없음</pre>
+
+  <!-- ✅ script는 반드시 여기 -->
+  <script>
+    const btn = document.getElementById("btn");
+    const out = document.getElementById("out");
+
+    btn.addEventListener("click", async () => {
+      out.textContent = "불러오는 중...";
+      try {
+        const res = await fetch("/api/bitcoin");
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        out.textContent = `[BTC/USD]: ${data.bitcoin.usd}`;
+      } catch (e) {
+        out.textContent = "에러: " + e.message;
+      }
+    });
+  </script>
+
+</body>
+</html>

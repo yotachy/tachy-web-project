@@ -1,0 +1,602 @@
+{% extends "base.html" %}
+{% block content %}
+
+<script>
+  window.CRYPTO_CATEGORY = "{{ crypto_category or 'spot' }}";
+</script>
+
+<div class="crypto-shell">
+
+  <!-- Ticker panel -->
+  <aside class="ticker-panel" aria-label="Ticker picker">
+    <div class="ticker-panel__head">
+      <div class="ticker-panel__title">
+        {{ (crypto_category or 'spot')|capitalize }} Tickers
+      </div>
+      <div class="ticker-panel__sub">Click to add/remove cards</div>
+    </div>
+
+    <div class="ticker-search">
+      <input id="tickerSearch" class="ticker-search__input" type="text" placeholder="Search…" />
+    </div>
+
+    <div class="ticker-list" id="tickerList"></div>
+
+    <div class="ticker-panel__foot">
+      <button class="btn btn-ghost" type="button" id="selectAllTickers">Select all</button>
+      <button class="btn btn-ghost" type="button" id="clearTickers" style="margin-left:8px;">Clear</button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <section class="crypto-main">
+
+    <div class="panel-lite">
+      <div class="panel-lite__title">Layout</div>
+      <div class="panel-lite__body layout-bar">
+        <div class="layout-slider-wrap">
+          <div class="layout-slider-head">
+            <div class="layout-slider-label">Columns</div>
+            <div class="layout-slider-value"><span id="colsValue">4</span>x</div>
+          </div>
+
+          <input
+            id="colsSlider"
+            class="layout-slider"
+            type="range"
+            min="2"
+            max="8"
+            step="1"
+            value="4"
+            aria-label="Select number of columns (2 to 8)"
+          />
+
+          <div class="layout-slider-scale" aria-hidden="true">
+            <span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span>
+          </div>
+        </div>
+
+        <div class="layout-hint">
+          Drag cards to reorder. Layout, density, and selection are saved locally.
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="kpi-grid crypto-grid"
+      id="cryptoGrid"
+      data-density="normal"
+      style="display:grid; grid-template-columns: repeat(4, minmax(230px, 1fr)); gap:12px;"
+    ></div>
+
+    <div class="panel-lite">
+      <div class="panel-lite__title">Controls</div>
+      <div class="panel-lite__body">
+        <button class="btn" type="button" id="refreshCrypto">Refresh now</button>
+        <button class="btn btn-ghost" type="button" id="resetPrefs" style="margin-left:8px;">Reset</button>
+        <span class="small-muted" id="cryptoStatus" style="margin-left:10px;">Idle</span>
+      </div>
+    </div>
+
+  </section>
+</div>
+
+<script>
+  // =====================================================
+  // Category
+  // =====================================================
+  const CURRENT_GROUP = (window.CRYPTO_CATEGORY || "spot").toLowerCase();
+
+  // group-specific localStorage keys (중요: 메뉴별로 저장 분리)
+  const GRID_ID = "cryptoGrid";
+  const COLS_KEY  = `crypto_cols_${CURRENT_GROUP}_v1`;
+  const ORDER_KEY = `crypto_order_${CURRENT_GROUP}_v1`;
+  const SEL_KEY   = `crypto_selected_${CURRENT_GROUP}_v1`;
+
+  // =====================================================
+  // Ticker catalog
+  // =====================================================
+  const TICKERS = [
+    // Spot
+    { id:"btc", label:"BTC", name:"Bitcoin Price", type:"Spot", group:"spot" },
+    { id:"eth", label:"ETH", name:"Ethereum Price", type:"Spot", group:"spot" },
+    { id:"sol", label:"SOL", name:"Solana Price", type:"Spot", group:"spot" },
+
+    // Structure
+    { id:"btcd", label:"BTC.D", name:"BTC Dominance", type:"Structure", group:"structure" },
+    { id:"total3", label:"TOTAL3", name:"Altcoin Market Cap", type:"Structure", group:"structure" },
+    { id:"total2", label:"TOTAL2", name:"Total Market Cap (ex BTC)", type:"Structure", group:"structure" },
+
+    // Derivatives
+    { id:"oi", label:"OI", name:"Open Interest", type:"Derivatives", group:"derivatives" },
+    { id:"fund", label:"FR", name:"Funding Rate", type:"Derivatives", group:"derivatives" },
+    { id:"basis", label:"BASIS", name:"Basis / Contango", type:"Derivatives", group:"derivatives" },
+
+    // On-chain
+    { id:"netflow", label:"NF", name:"Exchange Netflow", type:"On-chain", group:"onchain" },
+    { id:"stable", label:"STBL", name:"Stablecoin Supply", type:"On-chain", group:"onchain" },
+    { id:"active", label:"ADDR", name:"Active Addresses", type:"On-chain", group:"onchain" },
+  ];
+
+  // =====================================================
+  // Templates
+  // =====================================================
+  function cardHTML(t){
+    if (t.id === "btc"){
+      return `
+      <div class="kpi-card kpi-draggable" draggable="true" data-card-id="btc">
+        <div class="kpi-top">
+          <div>
+            <div class="kpi-label">BTC</div>
+            <div class="kpi-title">Bitcoin Price</div>
+          </div>
+          <div class="kpi-badge">Spot</div>
+        </div>
+        <div class="kpi-value" id="btcPrice">$—</div>
+        <div class="kpi-meta">
+          <span class="kpi-change" id="btcChange">—</span>
+          <span id="btcUpdated">Updated: —</span>
+        </div>
+        <div class="sparkline" id="btcSpark"></div>
+        <div class="kpi-foot">Near real-time + 7D trend (MVP)</div>
+      </div>`;
+    }
+
+    if (t.id === "eth"){
+      return `
+      <div class="kpi-card kpi-draggable" draggable="true" data-card-id="eth">
+        <div class="kpi-top">
+          <div>
+            <div class="kpi-label">ETH</div>
+            <div class="kpi-title">Ethereum Price</div>
+          </div>
+          <div class="kpi-badge">Spot</div>
+        </div>
+        <div class="kpi-value" id="ethPrice">$—</div>
+        <div class="kpi-meta">
+          <span class="kpi-change" id="ethChange">—</span>
+          <span id="ethUpdated">Updated: —</span>
+        </div>
+        <div class="sparkline" id="ethSpark"></div>
+        <div class="kpi-foot">Near real-time + 7D trend (MVP)</div>
+      </div>`;
+    }
+
+    return `
+    <div class="kpi-card kpi-draggable" draggable="true" data-card-id="${t.id}">
+      <div class="kpi-top">
+        <div>
+          <div class="kpi-label">${t.label}</div>
+          <div class="kpi-title">${t.name}</div>
+        </div>
+        <div class="kpi-badge">${t.type}</div>
+      </div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-foot">Add later (licensed / calculated)</div>
+    </div>`;
+  }
+
+  // =====================================================
+  // DOM helpers
+  // =====================================================
+  function $(id){ return document.getElementById(id); }
+  function grid(){ return $(GRID_ID); }
+
+  // =====================================================
+  // Selection state
+  // =====================================================
+  let selected = new Set();
+
+  function defaultSelectionForGroup(g){
+    if (g === "spot") return ["btc","eth"];
+    if (g === "structure") return ["btcd","total3"];
+    return []; // derivatives/onchain 기본은 empty
+  }
+
+  function loadSelection(){
+    const raw = localStorage.getItem(SEL_KEY);
+    if (!raw){
+      selected = new Set(defaultSelectionForGroup(CURRENT_GROUP));
+      return;
+    }
+    try{
+      const arr = JSON.parse(raw);
+      selected = new Set(Array.isArray(arr) ? arr : defaultSelectionForGroup(CURRENT_GROUP));
+    }catch{
+      selected = new Set(defaultSelectionForGroup(CURRENT_GROUP));
+    }
+  }
+
+  function saveSelection(){
+    localStorage.setItem(SEL_KEY, JSON.stringify(Array.from(selected)));
+  }
+
+  // =====================================================
+  // Order persistence
+  // =====================================================
+  function loadOrder(){
+    const raw = localStorage.getItem(ORDER_KEY);
+    if (!raw) return [];
+    try { return JSON.parse(raw) || []; } catch { return []; }
+  }
+
+  function saveOrderFromDOM(){
+    const g = grid();
+    if (!g) return;
+    const ids = Array.from(g.querySelectorAll(".kpi-draggable[data-card-id]"))
+      .map(el => el.dataset.cardId);
+    localStorage.setItem(ORDER_KEY, JSON.stringify(ids));
+  }
+
+  // =====================================================
+  // Render ticker panel (only CURRENT_GROUP)
+  // =====================================================
+  function renderTickerPanel(filterText=""){
+    const list = $("tickerList");
+    if (!list) return;
+
+    const q = (filterText || "").trim().toLowerCase();
+    const items = TICKERS
+      .filter(t => t.group === CURRENT_GROUP)
+      .filter(t => {
+        if (!q) return true;
+        return (t.label + " " + t.name + " " + t.type).toLowerCase().includes(q);
+      });
+
+    list.innerHTML = items.map(t => {
+      const on = selected.has(t.id);
+      return `
+        <button class="ticker-item ${on ? "is-active" : ""}" type="button" data-ticker-id="${t.id}">
+          <span class="ticker-item__left">
+            <span class="ticker-pill">${t.label}</span>
+            <span class="ticker-name">${t.name}</span>
+          </span>
+          <span class="ticker-tag">${t.type}</span>
+        </button>
+      `;
+    }).join("");
+
+    list.querySelectorAll(".ticker-item").forEach(btn => {
+      btn.addEventListener("click", () => toggleTicker(btn.dataset.tickerId));
+    });
+  }
+
+  function toggleTicker(id){
+    if (selected.has(id)) selected.delete(id);
+    else selected.add(id);
+
+    saveSelection();
+    renderTickerPanel($("tickerSearch")?.value || "");
+    renderCards();
+  }
+
+  // =====================================================
+  // Render cards
+  // =====================================================
+  function renderCards(){
+    const g = grid();
+    if (!g) return;
+
+    const selectedArr = Array.from(selected);
+
+    const order = loadOrder();
+    const ordered = [
+      ...order.filter(id => selected.has(id)),
+      ...selectedArr.filter(id => !order.includes(id))
+    ];
+
+    g.innerHTML = ordered.map(id => {
+      const t = TICKERS.find(x => x.id === id && x.group === CURRENT_GROUP);
+      return t ? cardHTML(t) : "";
+    }).join("");
+
+    bindDnD();
+    saveOrderFromDOM();
+
+    fetchCryptoWithGuard(); // BTC/ETH 존재할 때만 업데이트됨
+  }
+
+  // =====================================================
+  // Columns + density
+  // =====================================================
+  const slider = $("colsSlider");
+  const colsValue = $("colsValue");
+
+  function clampCols(n){
+    const v = Number(n);
+    if (!Number.isFinite(v)) return 4;
+    return Math.min(8, Math.max(2, Math.round(v)));
+  }
+
+  function densityForCols(cols){
+    const c = clampCols(cols);
+    if (c <= 3) return "loose";
+    if (c <= 5) return "normal";
+    if (c === 6) return "compact";
+    return "dense";
+  }
+
+  function minCardWidthForCols(cols){
+    const c = clampCols(cols);
+    if (c <= 3) return 260;
+    if (c <= 5) return 230;
+    if (c === 6) return 210;
+    if (c === 7) return 190;
+    return 170;
+  }
+
+  function applyColumns(cols){
+    const g = grid();
+    if (!g) return;
+
+    const n = clampCols(cols);
+    const minW = minCardWidthForCols(n);
+
+    g.style.gridTemplateColumns = `repeat(${n}, minmax(${minW}px, 1fr))`;
+    g.style.gap = (n >= 7) ? "10px" : "12px";
+    g.dataset.density = densityForCols(n);
+
+    if (slider) slider.value = String(n);
+    if (colsValue) colsValue.textContent = String(n);
+
+    localStorage.setItem(COLS_KEY, String(n));
+  }
+
+  function initCols(){
+    const saved = Number(localStorage.getItem(COLS_KEY));
+    applyColumns(saved || 4);
+  }
+
+  slider?.addEventListener("input", (e) => applyColumns(e.target.value));
+
+  // =====================================================
+  // Drag & Drop
+  // =====================================================
+  let dragged = null;
+
+  function onDragStart(e){
+    dragged = e.currentTarget;
+    dragged.classList.add("is-dragging");
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", dragged.dataset.cardId || "");
+  }
+  function onDragEnd(){
+    if (dragged) dragged.classList.remove("is-dragging");
+    dragged = null;
+    saveOrderFromDOM();
+  }
+  function onDragOver(e){
+    e.preventDefault();
+    const over = e.target.closest(".kpi-draggable");
+    if (!over || !dragged || over === dragged) return;
+    over.classList.add("is-over");
+  }
+  function onDragLeave(e){
+    const over = e.target.closest(".kpi-draggable");
+    if (over) over.classList.remove("is-over");
+  }
+  function onDrop(e){
+    e.preventDefault();
+    const g = grid();
+    const over = e.target.closest(".kpi-draggable");
+    if (!g || !over || !dragged || over === dragged) return;
+
+    over.classList.remove("is-over");
+
+    const rect = over.getBoundingClientRect();
+    const isAfter = (e.clientY - rect.top) > (rect.height / 2);
+    g.insertBefore(dragged, isAfter ? over.nextSibling : over);
+    saveOrderFromDOM();
+  }
+
+  function bindDnD(){
+    const g = grid();
+    if (!g) return;
+    g.querySelectorAll(".kpi-draggable").forEach(card => {
+      card.addEventListener("dragstart", onDragStart);
+      card.addEventListener("dragend", onDragEnd);
+      card.addEventListener("dragover", onDragOver);
+      card.addEventListener("dragleave", onDragLeave);
+      card.addEventListener("drop", onDrop);
+    });
+  }
+
+  // =====================================================
+  // Live data (BTC/ETH only)
+  // =====================================================
+  const CG_SIMPLE =
+    "https://api.coingecko.com/api/v3/simple/price" +
+    "?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true";
+
+  const CG_BTC_7D =
+    "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=7&interval=daily";
+
+  const CG_ETH_7D =
+    "https://api.coingecko.com/api/v3/coins/ethereum/market_chart?vs_currency=usd&days=7&interval=daily";
+
+  function fmtUSD(x){
+    if (!Number.isFinite(x)) return "—";
+    return "$" + x.toLocaleString(undefined, { maximumFractionDigits: 0 });
+  }
+
+  function fmtPct(x){
+    if (!Number.isFinite(x)) return "—";
+    const sign = x >= 0 ? "+" : "";
+    return sign + x.toFixed(2) + "%";
+  }
+
+  function setChange(el, pct){
+    if (!el) return;
+    el.textContent = fmtPct(pct);
+    el.classList.remove("kpi-change--up", "kpi-change--down");
+    if (Number.isFinite(pct)) el.classList.add(pct >= 0 ? "kpi-change--up" : "kpi-change--down");
+  }
+
+  function renderSparkline(el, values){
+    if (!el || !Array.isArray(values) || values.length < 2) return;
+
+    const width = 120, height = 32, pad = 2;
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const span = (max - min) || 1;
+
+    const xStep = (width - pad * 2) / (values.length - 1);
+    const points = values.map((v, i) => {
+      const x = pad + i * xStep;
+      const y = pad + (height - pad * 2) * (1 - (v - min) / span);
+      return `${x.toFixed(2)},${y.toFixed(2)}`;
+    });
+
+    const up = values[values.length - 1] >= values[0];
+
+    el.innerHTML = `
+      <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true">
+        <polyline class="sparkline__line ${up ? "is-up" : "is-down"}"
+                  points="${points.join(" ")}"></polyline>
+      </svg>
+    `;
+  }
+
+  async function fetchSpark(url, elId){
+    const el = document.getElementById(elId);
+    if (!el) return;
+    try{
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const data = await res.json();
+      const values = (data?.prices || []).map(p => Number(p[1])).filter(Number.isFinite);
+      renderSparkline(el, values);
+    }catch(e){
+      console.error("[sparkline]", elId, e);
+    }
+  }
+
+  async function fetchCrypto(){
+    const status = document.getElementById("cryptoStatus");
+    try{
+      if (status) status.textContent = "Fetching...";
+
+      const res = await fetch(CG_SIMPLE, { cache: "no-store" });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const data = await res.json();
+
+      const btc = data?.bitcoin;
+      const eth = data?.ethereum;
+
+      if (btc && document.getElementById("btcPrice")) {
+        document.getElementById("btcPrice").textContent = fmtUSD(btc.usd);
+        setChange(document.getElementById("btcChange"), btc.usd_24h_change);
+        const u = document.getElementById("btcUpdated");
+        if (u) u.textContent = "Updated: " + new Date().toLocaleTimeString();
+        fetchSpark(CG_BTC_7D, "btcSpark");
+      }
+
+      if (eth && document.getElementById("ethPrice")) {
+        document.getElementById("ethPrice").textContent = fmtUSD(eth.usd);
+        setChange(document.getElementById("ethChange"), eth.usd_24h_change);
+        const u = document.getElementById("ethUpdated");
+        if (u) u.textContent = "Updated: " + new Date().toLocaleTimeString();
+        fetchSpark(CG_ETH_7D, "ethSpark");
+      }
+
+      if (status) status.textContent = "OK";
+    }catch(e){
+      console.error(e);
+      if (status) status.textContent = "Error";
+    }
+  }
+
+  // =====================================================
+  // Scheduler (quality)
+  // =====================================================
+  let timer = null;
+  let inFlight = false;
+
+  const BASE_INTERVAL_MS = 90000; // 90s
+  const MAX_INTERVAL_MS  = 8 * 60 * 1000;
+  let currentInterval = BASE_INTERVAL_MS;
+
+  function stopSchedule(){
+    if (timer) clearTimeout(timer);
+    timer = null;
+  }
+  function scheduleNext(){
+    stopSchedule();
+    timer = setTimeout(tick, currentInterval);
+  }
+  async function tick(){
+    if (document.hidden) { scheduleNext(); return; }
+    await fetchCryptoWithGuard();
+    scheduleNext();
+  }
+
+  async function fetchCryptoWithGuard(){
+    if (inFlight) return;
+    inFlight = true;
+    try{
+      await fetchCrypto();
+      currentInterval = BASE_INTERVAL_MS;
+    }catch{
+      currentInterval = Math.min(MAX_INTERVAL_MS, currentInterval * 2);
+    }finally{
+      inFlight = false;
+      const status = document.getElementById("cryptoStatus");
+      if (status) status.textContent = "OK · " + Math.round(currentInterval/1000) + "s";
+    }
+  }
+
+  // =====================================================
+  // Actions
+  // =====================================================
+  document.getElementById("refreshCrypto")?.addEventListener("click", async () => {
+    currentInterval = BASE_INTERVAL_MS;
+    await fetchCryptoWithGuard();
+    scheduleNext();
+  });
+
+  document.addEventListener("visibilitychange", async () => {
+    if (!document.hidden) {
+      currentInterval = BASE_INTERVAL_MS;
+      await fetchCryptoWithGuard();
+      scheduleNext();
+    }
+  });
+
+  document.getElementById("tickerSearch")?.addEventListener("input", (e) => {
+    renderTickerPanel(e.target.value);
+  });
+
+  document.getElementById("selectAllTickers")?.addEventListener("click", () => {
+    const groupTickers = TICKERS.filter(t => t.group === CURRENT_GROUP).map(t => t.id);
+    selected = new Set(groupTickers);
+    saveSelection();
+    renderTickerPanel(document.getElementById("tickerSearch")?.value || "");
+    renderCards();
+  });
+
+  document.getElementById("clearTickers")?.addEventListener("click", () => {
+    selected = new Set();
+    saveSelection();
+    renderTickerPanel(document.getElementById("tickerSearch")?.value || "");
+    renderCards();
+  });
+
+  document.getElementById("resetPrefs")?.addEventListener("click", () => {
+    localStorage.removeItem(COLS_KEY);
+    localStorage.removeItem(ORDER_KEY);
+    localStorage.removeItem(SEL_KEY);
+    location.reload();
+  });
+
+  // =====================================================
+  // Init
+  // =====================================================
+  loadSelection();
+  renderTickerPanel("");
+  initCols();
+  renderCards();
+  fetchCryptoWithGuard();
+  scheduleNext();
+</script>
+
+{% endblock %}

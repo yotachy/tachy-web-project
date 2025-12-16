@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ title or "BlockMetrics" }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">BlockMetrics</div>
+
+      <nav class="nav">
+        <!-- Introduction -->
+        <a class="nav-item {% if active == 'intro' %}active{% endif %}"
+           href="{{ url_for('intro') }}"
+           title="Introduction">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 2a10 10 0 1 0 0 20a10 10 0 0 0 0-20Zm1 14h-2v-6h2v6Zm0-8h-2V6h2v2Z"/>
+            </svg>
+          </span>
+          <span class="nav-label">Introduction</span>
+        </a>
+
+        <!-- Macro -->
+        <a class="nav-item {% if active == 'macro' %}active{% endif %}"
+           href="{{ url_for('macro') }}"
+           title="Macro">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 19h16v2H2V3h2v16Zm4-3 3-4 3 2 4-6 1.7 1.1-5 7.5-3-2-2.9 3.9L8 16Z"/>
+            </svg>
+          </span>
+          <span class="nav-label">Macro</span>
+        </a>
+
+        <!-- Crypto (parent + sub) -->
+        <div class="nav-group {% if active and active.startswith('crypto_') %}open{% endif %}">
+          <a class="nav-item nav-parent {% if active and active.startswith('crypto_') %}active{% endif %}"
+             href="{{ url_for('crypto_category', category='spot') }}"
+             title="Crypto">
+            <span class="nav-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 2 4.5 12 12 22l7.5-10L12 2Zm0 3.2 4.7 6.3L12 13.9 7.3 11.5 12 5.2Zm0 14.6-4.6-6.1L12 15.9l4.6-2.2L12 19.8Z"/>
+              </svg>
+            </span>
+            <span class="nav-label">Crypto</span>
+          </a>
+
+          <div class="nav-sub">
+            <a class="nav-subitem {% if active == 'crypto_spot' %}active{% endif %}"
+               href="{{ url_for('crypto_category', category='spot') }}">Spot</a>
+
+            <a class="nav-subitem {% if active == 'crypto_structure' %}active{% endif %}"
+               href="{{ url_for('crypto_category', category='structure') }}">Structure</a>
+
+            <a class="nav-subitem {% if active == 'crypto_derivatives' %}active{% endif %}"
+               href="{{ url_for('crypto_category', category='derivatives') }}">Derivatives</a>
+
+            <a class="nav-subitem {% if active == 'crypto_onchain' %}active{% endif %}"
+               href="{{ url_for('crypto_category', category='onchain') }}">On-chain</a>
+          </div>
+        </div>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <header class="page-header">
+        <h1 class="page-title">{{ title }}</h1>
+      </header>
+
+      <section class="page-body">
+        {% block content %}{% endblock %}
+      </section>
+    </main>
+  </div>
+</body>
+</html>
